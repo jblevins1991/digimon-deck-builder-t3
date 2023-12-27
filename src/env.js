@@ -13,6 +13,18 @@ export const env = createEnv({
         (str) => !str.includes("YOUR_MYSQL_URL_HERE"),
         "You forgot to change the default URL"
       ),
+    DATABASE_USERNAME: z
+      .string()
+      .refine(
+        (str) => !str.includes("YOUR_MYSQL_USERNAME_HERE"),
+        "You forgot to configure a database."
+      ),
+    DATABASE_PASSWORD: z
+      .string()
+      .refine(
+        (str) => !str.includes("YOUR_MYSQL_PASSWORD_HERE"),
+        "You forgot to configure a database."
+      ),
     DATABASE_DATABASE: z
         .string()
         .refine(
@@ -52,6 +64,8 @@ export const env = createEnv({
    */
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
+    DATABASE_USERNAME: process.env.DATABASE_USERNAME,
+    DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
     DATABASE_DATABASE: process.env.DATABASE_DATABASE,
     NODE_ENV: process.env.NODE_ENV,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,

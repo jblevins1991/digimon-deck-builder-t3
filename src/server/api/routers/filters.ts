@@ -84,6 +84,7 @@ export const filterRouter = createTRPCRouter({
                     types: typesFound
                 };
             } catch (error) {
+                console.error(error);
                 throw new Error("Could not retrieve filters.");
             }
         }),

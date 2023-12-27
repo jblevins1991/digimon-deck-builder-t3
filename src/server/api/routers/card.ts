@@ -50,6 +50,7 @@ export const cardRouter = createTRPCRouter({
 
                 return cardsFound;
             } catch (error) {
+                console.error(error);
                 throw new Error("Could not retrieve cards.")
             }
         }),

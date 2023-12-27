@@ -57,20 +57,24 @@ export const CardGrid: React.FC<CardGridProps> = () => {
 
     return <>
         <div className='grid grid-cols-5 gap-4 w-full h-max overflow-y-auto'>
-            {data?.map((digimonCardData) => {
-                const {
-                    name,
-                    imageAlt,
-                    image
-                } = digimonCardData;
+            {data?.length > 0
+                ? data?.map((digimonCardData) => {
+                    const {
+                        name,
+                        imageAlt,
+                        image
+                    } = digimonCardData;
 
-                return <button key={name} onClick={() => openCardModal([digimonCardData])}>
-                    <img
-                        alt={imageAlt ?? "This alt text is missing. Please report which card by the card set identifier is missing this alt text to administrators via our discord."}
-                        src={image}
-                    />
-                </button>;
-            })}
+                    return <button key={name} onClick={() => openCardModal([digimonCardData])}>
+                        <img
+                            alt={imageAlt ?? "This alt text is missing. Please report which card by the card set identifier is missing this alt text to administrators via our discord."}
+                            src={image}
+                        />
+                    </button>;
+                })
+                : <p className='px-6'>
+                    We could not retrieve any cards at this time.    
+                </p>}
         </div>
 
         {selectedCard && <Modal
