@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { 
+import {
     createTRPCRouter,
     protectedProcedure,
     publicProcedure
@@ -9,7 +9,7 @@ import {
 import { attributes, cards, sets, stages } from "~/server/db/schema";
 
 export const cardRouter = createTRPCRouter({
-    createCard: protectedProcedure
+    createCard: publicProcedure
         .input(z.object({
             name: z.string(),
             level: z.number().optional(),
@@ -100,9 +100,7 @@ export const cardRouter = createTRPCRouter({
                     .leftJoin(stages, eq(
                         cards.stageId,
                         stages.id
-                    ))
-                    .limit(limit)
-                    .offset(offset);
+                    ));
 
                 return cardsFound;
             } catch (error) {

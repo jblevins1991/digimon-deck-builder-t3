@@ -1,28 +1,51 @@
+"use client";
+
 import { Accordion, AccordionSummary, Paper, Typography } from '@mui/material';
 import * as React from 'react';
 import { CardBlade } from '../atom/CardBlade';
+import { api } from '~/trpc/react';
+import { NewDeckForm } from './NewDeckForm';
+import { SessionProvider } from 'next-auth/react';
 
-interface DeckDrawerProps {
-    name: string;
-    description: string;
+interface DeckListProps {
+    deckId: string;
 }
 
-export const DeckDrawer: React.FC<DeckDrawerProps> = ({
-    name,
-    description
+export const DeckList: React.FC<DeckListProps> = ({
+    deckId
 }) => {
+    const {
+        data: deck,
+        isLoading,
+        isError
+    } = api.deck.getDeckById.useQuery({ id: parseInt(deckId) });
+
+    console.log('deck', deck)
+
     const digitama: Array<any> = [];
     const digimon: Array<any> = [];
     const options: Array<any> = [];
     const tamers: Array<any> = [];
 
+    if (isLoading) {
+        return <p>
+            Loading...
+        </p>;
+    }
+
+    if (!deck?.[0]?.name || isError) {
+        return <p>
+            We could not find that deck.
+        </p>;
+    }
+
     return <div className="min-h-max w-full grow-0 shadow-xl ml-4">
         <Typography className="text-sans font-bold text-4xl p-4 pb-4" variant="h2">
-            {name}
+            {deck?.[0]?.name}
         </Typography>
 
         <Typography className='text-sans font-regular text-xl p-4 py-2'>
-            {description}
+            <b>Strategy:</b> {deck?.[0]?.strategy}
         </Typography>
 
         <div className='w-full overflow-y-auto pb-8'>

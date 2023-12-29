@@ -10,6 +10,7 @@ import { setRouter } from "./routers/set";
 import { stageRouter } from "./routers/stage";
 import { typeRouter } from "./routers/type";
 import { filterRouter } from "./routers/filters";
+import { deckRouter } from "./routers/deck";
 
 /**
  * This is the primary router for your server.
@@ -22,6 +23,7 @@ export const appRouter = createTRPCRouter({
   cardTiming: cardTimingRouter,
   cardType: cardTypeRouter,
   color: colorRouter,
+  deck: deckRouter,
   filter: filterRouter,
   keyword: keywordRouter,
   set: setRouter,

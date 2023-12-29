@@ -12,13 +12,15 @@ export const deckRouter = createTRPCRouter({
     createDeck: protectedProcedure
         .input(z.object({
             name: z.string(),
+            userId: z.number(),
             strategy: z.string().optional(),
         }))
         .mutation(async ({ ctx, input }) => {
             try {
                 const {
                     name,
-                    strategy
+                    strategy,
+                    userId
                 } = input;
 
                 const deckCreated = await ctx
@@ -27,7 +29,7 @@ export const deckRouter = createTRPCRouter({
                     .values({
                         name,
                         strategy,
-                        userId: 0
+                        userId
                     });
 
                 return deckCreated;
@@ -120,7 +122,7 @@ export const deckRouter = createTRPCRouter({
                 throw new Error('Could not insert a card.');
             }
         }),
-    getDecksByUserId: protectedProcedure
+    getDecksByUserId: publicProcedure
         .input(z.object({
             id: z.number()
         }))
@@ -147,7 +149,7 @@ export const deckRouter = createTRPCRouter({
                 throw new Error("Could not retrieve cards.")
             }
         }),
-    getDeckById: protectedProcedure
+    getDeckById: publicProcedure
         .input(z.object({
             id: z.number()
         }))
