@@ -3,18 +3,9 @@ import * as React from 'react';
 /**
  * 
  */
-interface DeckProps {
-    name: string;
-    strategy?: string;
-    cards: Array<any>;
-}
-
-/**
- * 
- */
 interface DeckBuildingProps {
-    deck?: DeckProps;
-    setDeck?: React.Dispatch<DeckProps>;
+    deckId?: number;
+    setDeckId?: React.Dispatch<number>;
 }
 
 /**
@@ -38,12 +29,12 @@ interface DeckBuildingProviderProps {
 export const DeckBuilderProvider: React.FC<DeckBuildingProviderProps> = ({
     children
 }) => {
-    const [deckBuildingProps, setDeckBuildingProps] = React.useState<DeckProps | undefined>(undefined);
+    const [deckId, setDeckId] = React.useState<number | undefined>(undefined);
 
     return <DeckBuilderContext.Provider
         value={{
-            deck: deckBuildingProps,
-            setDeck: setDeckBuildingProps
+            deckId,
+            setDeckId
         }}
     >
         {children}
@@ -53,4 +44,4 @@ export const DeckBuilderProvider: React.FC<DeckBuildingProviderProps> = ({
 /**
  * 
  */
-export const useDeck = () => React.useContext(DeckBuilderContext);
+export const useDeckId = () => React.useContext(DeckBuilderContext);

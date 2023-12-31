@@ -77,6 +77,7 @@ export const cardRouter = createTRPCRouter({
                 const cardsFound = await ctx
                     .db
                     .select({
+                        id: cards.id,
                         name: cards.name,
                         bp: cards.bp,
                         effect: cards.effect,

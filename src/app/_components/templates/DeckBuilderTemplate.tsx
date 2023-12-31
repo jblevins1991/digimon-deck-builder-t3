@@ -25,7 +25,7 @@ export const DeckBuilderTemplate: React.FC<DeckBuilderTemplateProps> = ({
                     <InnerSidebar />
                 </DeckBuilderSidebar>
 
-                <div className='box-border mr-8'>
+                <div className='box-border'>
                     <CardFilterProvider>
                         <CardFilters />
 

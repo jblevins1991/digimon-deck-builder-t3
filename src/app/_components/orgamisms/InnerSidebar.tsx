@@ -4,6 +4,7 @@ import * as React from 'react';
 import { NewDeckForm } from '../molecules/NewDeckForm';
 import { DeckList } from '../molecules/DeckDrawer';
 import { api } from '~/trpc/react';
+import { useDeckId } from '~/deck-building';
 
 interface InnerSidebarProps {
 }
@@ -16,9 +17,17 @@ export const InnerSidebar: React.FC<InnerSidebarProps> = ({
         status
     } = useSession();
 
+    const { setDeckId } = useDeckId();
+
     const containsDeckId = !!params.slug;
     const isAuthenticated = status === 'authenticated';
     const isLoading = status === 'loading';
+    
+    setDeckId?.(
+        Array.isArray(params.slug)
+            ? parseInt(params?.slug[0] ?? '')
+            : parseInt(params?.slug ?? '')
+    );
 
     /**
      * Show the Create New Deck Form
@@ -35,7 +44,6 @@ export const InnerSidebar: React.FC<InnerSidebarProps> = ({
     if (containsDeckId && isAuthenticated) {
         return <>
             <DeckList
-                deckId={(params.slug as string)}
             />
         </>
     }

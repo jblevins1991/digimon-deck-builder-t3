@@ -130,7 +130,7 @@ export const decks = mysqlTable("deck", {
   id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
   name: varchar("name", { length: 256 }).notNull(),
   strategy: varchar("strategy", { length: 500 }),
-  userId: int("userId").notNull()
+  userId: varchar("userId", { length: 256 }).notNull()
 });
 
 export const deckRelations = relations(decks, ({ many, one }) => ({
@@ -195,6 +195,7 @@ export const users = mysqlTable("user", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  decks: many(decks),
   sessions: many(sessions),
 }));
 

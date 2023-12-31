@@ -4,6 +4,7 @@ import { Modal, Skeleton } from '@mui/material';
 
 import { useCardFilters } from '~/card-filtering';
 import { api } from '~/trpc/react';
+import { useDeckId } from '~/deck-building';
 
 export interface CardGridProps {
 }
@@ -12,6 +13,10 @@ export interface CardGridProps {
  * The CardGrid component is responsible for fetching the cards from the API with the set filters. 
  */
 export const CardGrid: React.FC<CardGridProps> = () => {
+    const {
+        deckId
+    } = useDeckId();
+
     const [selectedCard, setSelectedCard] = React.useState<typeof data | undefined>(undefined);
 
     // @TODO: create CardFiltersContext and CardFiltersProvider
@@ -35,7 +40,11 @@ export const CardGrid: React.FC<CardGridProps> = () => {
 
     const {
         mutate: addToDeck
-    } = api.deck.addToDeck.useMutation();
+    } = api.deck.addToDeck.useMutation({
+        onSuccess: () => {
+            // invalidate the getDeckById query
+        }
+    });
 
     console.log(data);
 
@@ -47,11 +56,14 @@ export const CardGrid: React.FC<CardGridProps> = () => {
         setSelectedCard(undefined);
     }
 
-    function rightClickOnCard(card: any) {
-        addToDeck({
-            quantity: 4,
-            ...card
-        });
+    function rightClickOnCard(card: typeof data) {
+        if (card?.[0] && typeof deckId !== 'undefined') {
+            addToDeck({
+                quantity: 4,
+                cardId: card[0].id,
+                deckId
+            });
+        }
     }
 
     if (isLoading) {
@@ -87,7 +99,15 @@ export const CardGrid: React.FC<CardGridProps> = () => {
                         image
                     } = digimonCardData;
 
-                    return <button className='shadow-xl' key={name} onClick={() => openCardModal([digimonCardData])}>
+                    return <button
+                        className='shadow-xl'
+                        key={name}
+                        onClick={() => openCardModal([digimonCardData])}
+                        onContextMenu={(event: React.MouseEvent<HTMLButtonElement>) => {
+                            event.preventDefault();
+                            rightClickOnCard([digimonCardData])
+                        }}
+                    >
                         <img
                             alt={imageAlt ?? "This alt text is missing. Please report which card by the card set identifier is missing this alt text to administrators via our discord."}
                             src={image}

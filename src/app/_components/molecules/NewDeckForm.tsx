@@ -2,7 +2,7 @@
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 import { api } from '~/trpc/react';
 
@@ -17,21 +17,28 @@ export const NewDeckForm: React.FC<NewDeckFormProps> = () => {
     const isAuthenticated = status === "authenticated";
 
     const {
-        mutate: createDeck
+        mutate: createDeck,
+        isError,
+        error
     } = api.deck.createDeck.useMutation();
 
-    function handleOnSubmit({ name, strategy }: {
-        name: string;
-        strategy?: string;
-    }) {
-        if (isAuthenticated && session?.user) {
-            const userId = isNaN(session.user.id) && typeof session.user.id === 'string'
-                ? parseInt(session.user.id)
-                : session.user.id;
+    React.useEffect(() => {
+        if (isError) {
+            console.error(error.message);
+        }
+    }, [isError, error])
 
-            const deck = createDeck({
+    const handleOnSubmit: SubmitHandler<{ name: string; strategy?: string; }> = (values) => {
+        const { name, strategy } = values;
+
+        console.log('values: ', {
+            name, strategy
+        })
+        
+        if (isAuthenticated && session?.user) {
+            createDeck({
                 name,
-                userId,
+                userId: session.user.id,
                 strategy
             });
 
