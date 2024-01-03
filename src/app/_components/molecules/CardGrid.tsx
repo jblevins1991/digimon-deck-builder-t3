@@ -6,6 +6,7 @@ import { useCardFilters } from '~/card-filtering';
 import { api } from '~/trpc/react';
 import { useDeckId } from '~/deck-building';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CardGridProps {
 }
 
@@ -134,8 +135,20 @@ export const CardGrid: React.FC<CardGridProps> = () => {
                         {selectedCard[0]?.name}
                     </h2>
 
+                    {!!selectedCard[0]?.cardTypeName && <p className='text-lg mb-4'>
+                        <b>Card Type: </b> {(selectedCard[0].cardTypeName as string)}
+                    </p>}
+
                     {!!selectedCard[0]?.level && <p className='text-lg mb-4'>
                         <b>Level: </b> {selectedCard[0].level}    
+                    </p>}
+
+                    {!!selectedCard[0]?.stageName && <p className='text-lg mb-4'>
+                        <b>Stage: </b> {(selectedCard[0].stageName as string)}
+                    </p>}
+
+                    {!!selectedCard[0]?.cardTypeName && <p className='text-lg mb-4'>
+                        <b>Set: </b> {(selectedCard[0].setName as string)}
                     </p>}
 
                     {!!selectedCard[0]?.bp && <p className='text-lg mb-4'>

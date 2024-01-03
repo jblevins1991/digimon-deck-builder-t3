@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -6,7 +6,7 @@ import {
     protectedProcedure,
     publicProcedure
 } from "~/server/api/trpc";
-import { attributes, cards, sets, stages } from "~/server/db/schema";
+import { attributes, cardTypes, cards, sets, stages } from "~/server/db/schema";
 
 export const cardRouter = createTRPCRouter({
     createCard: publicProcedure
@@ -85,14 +85,19 @@ export const cardRouter = createTRPCRouter({
                         imageAlt: cards.imageAlt,
                         image: cards.image,
                         level: cards.level,
-                        attributeId: cards.attributeId,
-                        setId: cards.setId,
-                        stageId: cards.stageId
+                        attributeName: sql`${attributes.name}`.as('attributeName'),
+                        cardTypeName: sql`${cardTypes.name}`.as('cardTypeName'),
+                        setName: sql`${sets.name}`.as('setName'),
+                        stageName: sql`${stages.name}`.as('stageName'),
                     })
                     .from(cards)
                     .leftJoin(attributes, eq(
                         cards.attributeId,
                         attributes.id
+                    ))
+                    .leftJoin(cardTypes, eq(
+                        cards.cardTypeId,
+                        cardTypes.id
                     ))
                     .leftJoin(sets, eq(
                         cards.setId,

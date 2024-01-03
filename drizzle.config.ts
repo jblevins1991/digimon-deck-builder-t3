@@ -5,6 +5,7 @@ import { env } from "~/env";
 export default {
   schema: "./src/server/db/schema.ts",
   driver: "mysql2",
+  out: "./migrations",
   dbCredentials: {
     uri: env.DATABASE_URL,
     database: env.DATABASE_DATABASE

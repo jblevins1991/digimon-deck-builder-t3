@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { 
@@ -6,7 +6,7 @@ import {
     protectedProcedure,
     publicProcedure
 } from "~/server/api/trpc";
-import { attributes, cards, deckCard, decks, sets, stages } from "~/server/db/schema";
+import { attributes, cardTypes, cards, colors, deckCard, decks, sets, stages, types } from "~/server/db/schema";
 
 export const deckRouter = createTRPCRouter({
     createDeck: publicProcedure
@@ -16,12 +16,13 @@ export const deckRouter = createTRPCRouter({
             strategy: z.string().optional(),
         }))
         .mutation(async ({ ctx, input }) => {
+            const {
+                name,
+                strategy,
+                userId
+            } = input;
+
             try {
-                const {
-                    name,
-                    strategy,
-                    userId
-                } = input;
 
                 console.log('inputs: ', {
                     name, strategy, userId
@@ -134,75 +135,20 @@ export const deckRouter = createTRPCRouter({
             try {
                 const { id } = input;
 
-                const cardSq = ctx
-                    .db
-                    .select({
-                        id: cards.id,
-                        name: cards.name,
-                        bp: cards.bp,
-                        effect: cards.effect,
-                        inheritedEffect: cards.inheritedEffect,
-                        attribute: attributes.name,
-                        stage: stages.name
-                    })
-                    .from(cards)
-                    .leftJoin(attributes, eq(
-                        attributes.id,
-                        cards.attributeId
-                    ))
-                    .leftJoin(stages, eq(
-                        stages.id,
-                        cards.stageId,
-                    ))
-                    .where(eq(
-                        deckCard.cardId,
-                        cards.id
-                    ))
-                    .as('cardSq');
-
-                const deckCardsSq = ctx
-                    .db
-                    .select({
-                        id: deckCard.id,
-                        cardId: deckCard.cardId,
-                        deckId: deckCard.deckId,
-                        name: cardSq.name,
-                        bp: cardSq.bp,
-                        effect: cardSq.effect,
-                        inheritedEffect: cardSq.inheritedEffect,
-                        attribute: cardSq.attribute,
-                        stage: cardSq.stage,
-                        quantity: deckCard.quantity
-                    })
-                    .from(deckCard)
-                    .leftJoin(cardSq, eq(
-                        deckCard.cardId,
-                        cardSq.id
-                    ))
-                    .where(eq(
-                        deckCard.deckId,
-                        decks.id
-                    ))
-                    .as('deckCardsSq');
-
-                const decksFound = await ctx
+                const query = await ctx
                     .db
                     .select({
                         id: decks.id,
                         name: decks.name,
-                        strategy: decks.strategy,
+                        strategy: decks.strategy
                     })
                     .from(decks)
-                    .leftJoin(deckCardsSq, eq(
-                        decks.id,
-                        deckCardsSq.deckId,
-                    ))
                     .where(eq(
                         decks.userId,
                         id
                     ));
 
-                return decksFound;
+                return query;
             } catch (error) {
                 console.error(error);
                 throw new Error("Could not retrieve cards.")
@@ -216,23 +162,59 @@ export const deckRouter = createTRPCRouter({
             const { id } = input;
 
             try {
-
-                const cardSq = ctx
+                const query = await ctx
                     .db
                     .select({
-                        cardId: cards.id,
-                        cardBattlePower: cards.bp,
-                        cardName: cards.name,
-                        cardEffect: cards.effect,
-                        cardInheritedEffect: cards.inheritedEffect,
-                        cardAttributeName: attributes.name,
-                        cardSetName: sets.name,
-                        cardStageName: stages.name
+                        id: decks.id,
+                        name: decks.name,
+                        strategy: decks.strategy
+                    })
+                    .from(decks)
+                    .where(eq(
+                        decks.id,
+                        id
+                    ));
+
+                return query;
+            } catch (error) {
+                console.error(error);
+                throw new Error(`Could not retrieve deck by id ${id}.`);
+            }
+        }),
+    getDeckCardsByDeckId: publicProcedure
+        .input(z.object({
+            id: z.number(),
+        }))
+        .query(async ({ ctx, input }) => {
+            const { id } = input;
+
+            console.log('ID: ', id)
+
+            try {
+                const cardSubQuery = ctx
+                    .db
+                    .select({
+                        lookupId: sql`${cards.id}`.as('lookupId'),
+                        cardName: sql`${cards.name}`.as('cardName'),
+                        cardImageAlt: sql`${cards.imageAlt}`.as('cardImageAlt'),
+                        cardImage: sql`${cards.image}`.as('cardImage'),
+                        cardBattlePower: sql`${cards.bp}`.as('cardBattlePower'),
+                        cardEffect: sql`${cards.effect}`.as('cardEffect'),
+                        cardInheritedEffect: sql`${cards.inheritedEffect}`.as('cardInheritedEffect'),
+                        cardAttributeName: sql`${attributes.name}`.as('cardAttributeName'),
+                        cardCardTypeName: sql`${cardTypes.name}`.as('cardCardTypeName'),
+                        cardSetName: sql`${sets.name}`.as('cardSetName'),
+                        cardStageName: sql`${stages.name}`.as('cardStageName'),
+                        cardTypeName: sql`${types.name}`.as('cardTypeName'),
                     })
                     .from(cards)
                     .leftJoin(attributes, eq(
                         attributes.id,
                         cards.attributeId
+                    ))
+                    .leftJoin(cardTypes, eq(
+                        cardTypes.id,
+                        cards.cardTypeId
                     ))
                     .leftJoin(sets, eq(
                         sets.id,
@@ -242,43 +224,51 @@ export const deckRouter = createTRPCRouter({
                         stages.id,
                         cards.stageId
                     ))
-                    .as('cardSq');
-
-                const deckSq = ctx
-                    .db
-                    .select({
-                        deckId: decks.id,
-                        deckName: decks.name,
-                        deckStrategy: decks.strategy
-                    })
-                    .from(decks)
-                    .as('deckSq');
+                    .leftJoin(types, eq(
+                        types.id,
+                        cards.cardTypeId
+                    ))
+                    .as('cardSubQuery');
 
                 const deckCardsFound = await ctx
                     .db
                     .select({
-                        id: deckSq.deckId,
-                        deckName: deckSq.deckName,
-                        deckStrategy: deckSq.deckStrategy,
+                        deckName: sql`${decks.name}`.as('deckName'),
+                        deckStrategy: sql`${decks.strategy}`.as('deckStrategy'),
+                        quantity: deckCard.quantity,
+                        cardId: sql`${cardSubQuery.lookupId}`.as('cardsId'),
+                        cardName: sql`${cardSubQuery.cardName}`.as('cardName'),
+                        cardImageAlt: sql`${cardSubQuery.cardImageAlt}`.as('cardImageAlt'),
+                        cardImage: sql`${cardSubQuery.cardImage}`.as('cardImage'),
+                        cardCardTypeName: sql`${cardSubQuery.cardCardTypeName}`.as('cardCardTypeName'),
+                        cardBattlePower: sql`${cardSubQuery.cardBattlePower}`.as('cardBattlePower'),
+                        cardEffect: sql`${cardSubQuery.cardEffect}`.as('cardEffect'),
+                        cardInheritedEffect: sql`${cardSubQuery.cardInheritedEffect}`.as('cardInheritedEffect'),
+                        cardAttributeName: sql`${cardSubQuery.cardAttributeName}`.as('cardAttributeName'),
+                        cardSetName: sql`${cardSubQuery.cardSetName}`.as('cardSetName'),
+                        cardStageName: sql`${cardSubQuery.cardStageName}`.as('cardStageName'),
+                        cardTypeName: sql`${cardSubQuery.cardTypeName}`.as('cardTypeName'),
                     })
                     .from(deckCard)
-                    .leftJoin(deckSq, eq(
-                        deckSq.deckId,
-                        deckCard.deckId
+                    .leftJoin(decks, eq(
+                        deckCard.deckId,
+                        decks.id,
                     ))
-                    .leftJoin(cardSq, eq(
-                        cardSq.cardId,
-                        deckCard.cardId
+                    .leftJoin(cardSubQuery, eq(
+                        deckCard.cardId,
+                        cardSubQuery.lookupId,
                     ))
                     .where(eq(
                         deckCard.deckId,
-                        id
+                        id,
                     ));
+
+                console.log('deck: ', deckCardsFound);
 
                 return deckCardsFound;
             } catch (error) {
-                console.error(error);
-                throw new Error(`Could not retrieve deck by id ${id}.`);
+                console.error(`error: `, error)
+                throw new Error('');
             }
         }),
     getDecksByPage: publicProcedure

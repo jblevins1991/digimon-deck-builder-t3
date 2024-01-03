@@ -43,6 +43,15 @@ export const cards = mysqlTable(
     setId: int("setId").notNull(),
     stageId: int("stageId"),
     typeId: int("typeId")
+  },
+  (table) => {
+    return {
+      attributeIdIndex: index('attribute_id_index').on(table.attributeId),
+      cardTypeIdIndex: index('card_type_id_index').on(table.cardTypeId),
+      setIdIndex: index('set_id_index').on(table.setId),
+      stageIdIndex: index('stage_id_index').on(table.stageId),
+      typeIdIndex: index('type_id_index').on(table.typeId),
+    };
   }
 );
 
@@ -113,6 +122,11 @@ export const deckCard = mysqlTable("deckcard", {
   quantity: int("quantity"),
   deckId: int("deckId"),
   cardId: int("cardId")
+}, (table) => {
+  return {
+    deckIdIndex: index('deck_id_index').on(table.deckId),
+    cardIdIndex: index('card_id_index').on(table.cardId),
+  };
 });
 
 export const deckCardRelations = relations(deckCard, ({ one }) => ({
@@ -131,6 +145,10 @@ export const decks = mysqlTable("deck", {
   name: varchar("name", { length: 256 }).notNull(),
   strategy: varchar("strategy", { length: 500 }),
   userId: varchar("userId", { length: 256 }).notNull()
+}, (table) => {
+  return {
+    userIdIndex: index('user_id_index').on(table.userId),
+  };
 });
 
 export const deckRelations = relations(decks, ({ many, one }) => ({
