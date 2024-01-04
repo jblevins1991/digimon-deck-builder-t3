@@ -37,13 +37,29 @@ export const CardBlade: React.FC<CardBladeProps> = ({
         }
     });
 
+    const onDelete = React.useCallback(() => {
+        if (cardId && deckId) {
+            removeFromDeck({
+                cardId: parseInt(cardId),
+                deckId
+            })
+        }
+    }, [cardId, deckId]);
+
     const onDecrement = React.useCallback(() => {
         if (deckId && cardId) {
-            updateQuantityOfCardInDeck({
-                cardId: parseInt(cardId),
-                deckId,
-                quantity: quantity - 1
-            });
+            if (quantity === 1) {
+                removeFromDeck({
+                    cardId: parseInt(cardId),
+                    deckId
+                });
+            } else {
+                updateQuantityOfCardInDeck({
+                    cardId: parseInt(cardId),
+                    deckId,
+                    quantity: quantity - 1
+                });
+            }
         }
     }, [cardId, deckId, quantity]);
 

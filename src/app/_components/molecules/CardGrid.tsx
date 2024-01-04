@@ -18,7 +18,7 @@ export const CardGrid: React.FC<CardGridProps> = () => {
         deckId
     } = useDeckId();
 
-    const [selectedCard, setSelectedCard] = React.useState<typeof data | undefined>(undefined);
+    const [selectedCard, setSelectedCard] = React.useState<typeof cards | undefined>(undefined);
 
     // @TODO: create CardFiltersContext and CardFiltersProvider
     const {
@@ -30,7 +30,7 @@ export const CardGrid: React.FC<CardGridProps> = () => {
     // const changeQuantityInDeck = (quantity: number) => api.deck.
 
     const {
-        data,
+        data: cards,
         error,
         isLoading,
         isError
@@ -47,9 +47,9 @@ export const CardGrid: React.FC<CardGridProps> = () => {
         }
     });
 
-    console.log(data);
+    console.log(cards);
 
-    function openCardModal(card: typeof data) {
+    function openCardModal(card: typeof cards) {
         setSelectedCard(card);
     }
 
@@ -57,7 +57,7 @@ export const CardGrid: React.FC<CardGridProps> = () => {
         setSelectedCard(undefined);
     }
 
-    function rightClickOnCard(card: typeof data) {
+    function rightClickOnCard(card: typeof cards) {
         if (card?.[0] && typeof deckId !== 'undefined') {
             addToDeck({
                 quantity: 4,
@@ -85,7 +85,7 @@ export const CardGrid: React.FC<CardGridProps> = () => {
         </p>;
     }
 
-    if (data.length <= 0) {
+    if (cards.length <= 0) {
         return <p className='text-red-500 text-lg font-semibold px-6'>
             We could not retrieve any cards at this time.    
         </p>;
@@ -93,7 +93,7 @@ export const CardGrid: React.FC<CardGridProps> = () => {
 
     return <>
         <div className='grid grid-cols-5 gap-4 w-full h-max overflow-y-auto px-6'>
-            {data?.map((digimonCardData) => {
+            {cards?.map((digimonCardData) => {
                     const {
                         name,
                         imageAlt,

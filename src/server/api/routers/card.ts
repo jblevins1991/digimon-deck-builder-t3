@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import {
     createTRPCRouter,
-    protectedProcedure,
     publicProcedure
 } from "~/server/api/trpc";
 import { attributes, cardTypes, cards, sets, stages } from "~/server/db/schema";
@@ -67,11 +66,30 @@ export const cardRouter = createTRPCRouter({
         }),
     getCardsByPage: publicProcedure
         .input(z.object({
+            battlePower: z.object({
+                end: z.number().optional(),
+                start: z.number().optional(),
+            }).optional(),
+            level: z.number().optional(),
+            attributes: z.array(z.number()).optional(),
+            cardTypes: z.array(z.number()).optional(),
+            sets: z.array(z.number()).optional(),
+            stages: z.array(z.number()).optional(),
+            searchTerm: z.string().optional(),
             limit: z.number(),
             offset: z.number()
         }))
         .query(async ({ ctx, input }) => {
-            const { limit, offset  } = input;
+            const {
+                battlePower: battlePowerFilter,
+                level: levelFilter,
+                attributes: attributesFilter,
+                sets: setsFilter,
+                stages: stagesFilter,
+                searchTerm,
+                limit,
+                offset
+            } = input;
 
             try {
                 const cardsFound = await ctx
