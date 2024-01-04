@@ -21,19 +21,22 @@ export const CardBlade: React.FC<CardBladeProps> = ({
     quantity = 1
 }) => {
     const { deckId } = useDeckId();
+    const utils = api.useUtils();
     const {
         mutate: removeFromDeck
     } = api.deck.removeFromDeck.useMutation({
-        onSuccess: () => {
+        async onSuccess() {
             // invalidate the getDeckById query
+            await utils.deck.getDeckCardsByDeckId.invalidate();
         }
     });
 
     const {
         mutate: updateQuantityOfCardInDeck
     } = api.deck.updateQuantityOfCardInDeck.useMutation({
-        onSuccess: () => {
+        async onSuccess() {
             // invalidate the getDeckById query
+            await utils.deck.getDeckCardsByDeckId.invalidate();
         }
     });
 
@@ -42,13 +45,14 @@ export const CardBlade: React.FC<CardBladeProps> = ({
             removeFromDeck({
                 cardId: parseInt(cardId),
                 deckId
-            })
+            });
         }
     }, [cardId, deckId]);
 
     const onDecrement = React.useCallback(() => {
         if (deckId && cardId) {
-            if (quantity === 1) {
+            console.log(quantity);
+            if (quantity <= 1) {
                 removeFromDeck({
                     cardId: parseInt(cardId),
                     deckId
@@ -65,11 +69,18 @@ export const CardBlade: React.FC<CardBladeProps> = ({
 
     const onQuantityUpdate = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         if (!!deckId && cardId) {
-            updateQuantityOfCardInDeck({
-                cardId: parseInt(cardId),
-                deckId,
-                quantity: parseInt(event.currentTarget.value)
-            });
+            if (quantity === 1 && parseInt(event.currentTarget.value) === 0) {
+                removeFromDeck({
+                    cardId: parseInt(cardId),
+                    deckId
+                });
+            } else {
+                updateQuantityOfCardInDeck({
+                    cardId: parseInt(cardId),
+                    deckId,
+                    quantity: parseInt(event.currentTarget.value)
+                });
+            }
         }
     }, [cardId, deckId, quantity]);
 

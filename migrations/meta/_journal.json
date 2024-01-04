@@ -8,6 +8,13 @@
       "when": 1704140816056,
       "tag": "0000_short_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1704340112900,
+      "tag": "0001_rare_night_nurse",
+      "breakpoints": true
     }
   ]
 }

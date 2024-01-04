@@ -144,7 +144,8 @@ export const decks = mysqlTable("deck", {
   id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
   name: varchar("name", { length: 256 }).notNull(),
   strategy: varchar("strategy", { length: 500 }),
-  userId: varchar("userId", { length: 256 }).notNull()
+  userId: varchar("userId", { length: 256 }).notNull(),
+  formatId: varchar("formatId", { length: 256 }),
 }, (table) => {
   return {
     userIdIndex: index('user_id_index').on(table.userId),
@@ -156,7 +157,45 @@ export const deckRelations = relations(decks, ({ many, one }) => ({
     fields: [decks.userId],
     references: [users.id]
   }),
+  format: one(format, {
+    fields: [decks.formatId],
+    references: [format.id]
+  }),
   cards: many(deckCard),
+}));
+
+export const cardList = mysqlTable(
+  "cardList",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+    name: varchar("name", { length: 256 }).notNull()
+  }
+);
+
+export const cardListRelations = relations(cardList, ({ many }) => ({
+  cards: many(cards),
+  deckds: many(decks)
+}));
+
+export const format = mysqlTable(
+  "format",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+    name: varchar("name", { length: 256 }).notNull(),
+    banListId: varchar("banListId", { length: 256 }),
+    limitedListId: varchar("limitedListId", { length: 256 }),
+  }
+);
+
+export const formatRelations = relations(format, ({ one }) => ({
+  banList: one(cardList, {
+    fields: [format.banListId],
+    references: [cardList.id]
+  }),
+  limitedList: one(cardList, {
+    fields: [format.limitedListId],
+    references: [cardList.id]
+  }),
 }));
 
 export const keywords = mysqlTable(

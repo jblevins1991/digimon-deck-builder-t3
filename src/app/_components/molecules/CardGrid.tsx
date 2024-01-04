@@ -17,6 +17,7 @@ export const CardGrid: React.FC<CardGridProps> = () => {
     const {
         deckId
     } = useDeckId();
+    const utils = api.useUtils();
 
     const [selectedCard, setSelectedCard] = React.useState<typeof cards | undefined>(undefined);
 
@@ -42,8 +43,9 @@ export const CardGrid: React.FC<CardGridProps> = () => {
     const {
         mutate: addToDeck
     } = api.deck.addToDeck.useMutation({
-        onSuccess: () => {
+        async onSuccess() {
             // invalidate the getDeckById query
+            await utils.deck.getDeckCardsByDeckId.invalidate();
         }
     });
 
@@ -60,7 +62,7 @@ export const CardGrid: React.FC<CardGridProps> = () => {
     function rightClickOnCard(card: typeof cards) {
         if (card?.[0] && typeof deckId !== 'undefined') {
             addToDeck({
-                quantity: 4,
+                quantity: 1,
                 cardId: card[0].id,
                 deckId
             });

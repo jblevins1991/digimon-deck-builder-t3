@@ -57,16 +57,40 @@ export const deckRouter = createTRPCRouter({
                     quantity
                 } = input;
 
-                const deckCardCreated = await ctx
+                const copiesOfCardInDeck = await ctx
                     .db
-                    .insert(deckCard)
-                    .values({
-                        deckId,
-                        cardId,
-                        quantity
-                    });
+                    .select({
+                        quantity: deckCard.quantity
+                    })
+                    .from(deckCard)
+                    .where(
+                        and(
+                            eq(deckCard.deckId, deckId),
+                            eq(deckCard.cardId, cardId)
+                        )
+                    );
 
-                return deckCardCreated;
+                let deckCardUpserted = undefined;
+
+                if (copiesOfCardInDeck.length > 0 && !!copiesOfCardInDeck[0]?.quantity) {
+                    deckCardUpserted = await ctx
+                        .db
+                        .update(deckCard)
+                        .set({
+                            quantity: copiesOfCardInDeck[0].quantity + quantity
+                        });
+                } else {
+                    deckCardUpserted = await ctx
+                        .db
+                        .insert(deckCard)
+                        .values({
+                            deckId,
+                            cardId,
+                            quantity
+                        });
+                }
+
+                return deckCardUpserted;
             } catch (error) {
                 console.error(error);
                 throw new Error('Could not insert a card.');
