@@ -23,11 +23,20 @@ export const CardBlade: React.FC<CardBladeProps> = ({
     const { deckId } = useDeckId();
     const utils = api.useUtils();
     const {
-        mutate: removeFromDeck
-    } = api.deck.removeFromDeck.useMutation({
+        mutate: deleteFromDeck
+    } = api.deck.deleteFromDeck.useMutation({
         async onSuccess() {
             // invalidate the getDeckById query
-            await utils.deck.getDeckCardsByDeckId.invalidate();
+            await utils.deck.getDeckById.invalidate();
+        }
+    });
+
+    const {
+        mutate: decrementQuantityInDeckBy
+    } = api.deck.decrementQuantityInDeckBy.useMutation({
+        async onSuccess() {
+            // invalidate the getDeckById query
+            await utils.deck.getDeckById.invalidate();
         }
     });
 
@@ -36,13 +45,21 @@ export const CardBlade: React.FC<CardBladeProps> = ({
     } = api.deck.updateQuantityOfCardInDeck.useMutation({
         async onSuccess() {
             // invalidate the getDeckById query
-            await utils.deck.getDeckCardsByDeckId.invalidate();
+            await utils.deck.getDeckById.invalidate();
         }
     });
 
+    const {
+        mutate: incrementQuantityInDeckBy
+    } = api.deck.incrementQuantityInDeckBy.useMutation({
+        async onSuccess() {
+            await utils.deck.getDeckById.invalidate();
+        }
+    })
+
     const onDelete = React.useCallback(() => {
         if (cardId && deckId) {
-            removeFromDeck({
+            deleteFromDeck({
                 cardId: parseInt(cardId),
                 deckId
             });
@@ -51,45 +68,30 @@ export const CardBlade: React.FC<CardBladeProps> = ({
 
     const onDecrement = React.useCallback(() => {
         if (deckId && cardId) {
-            console.log(quantity);
-            if (quantity <= 1) {
-                removeFromDeck({
-                    cardId: parseInt(cardId),
-                    deckId
-                });
-            } else {
-                updateQuantityOfCardInDeck({
-                    cardId: parseInt(cardId),
-                    deckId,
-                    quantity: quantity - 1
-                });
-            }
+            decrementQuantityInDeckBy({
+                cardId: parseInt(cardId),
+                deckId,
+                quantity: 1
+            });
         }
     }, [cardId, deckId, quantity]);
 
     const onQuantityUpdate = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         if (!!deckId && cardId) {
-            if (quantity === 1 && parseInt(event.currentTarget.value) === 0) {
-                removeFromDeck({
-                    cardId: parseInt(cardId),
-                    deckId
-                });
-            } else {
-                updateQuantityOfCardInDeck({
-                    cardId: parseInt(cardId),
-                    deckId,
-                    quantity: parseInt(event.currentTarget.value)
-                });
-            }
+            updateQuantityOfCardInDeck({
+                cardId: parseInt(cardId),
+                deckId,
+                quantity: parseInt(event.currentTarget.value)
+            });
         }
     }, [cardId, deckId, quantity]);
 
     const onIncrement = React.useCallback(() => {
         if (deckId && cardId) {
-            updateQuantityOfCardInDeck({
+            incrementQuantityInDeckBy({
                 cardId: parseInt(cardId),
                 deckId,
-                quantity: quantity + 1
+                quantity: 1
             });
         }
     }, [cardId, deckId, quantity]);

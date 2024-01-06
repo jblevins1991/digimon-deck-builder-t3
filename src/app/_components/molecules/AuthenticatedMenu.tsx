@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { signOut, useSession } from 'next-auth/react';
 
-import { api } from '~/trpc/server';
+import { api } from '~/trpc/react';
 import { ClickAwayListener, Popover } from '@mui/material';
 import { ClassNames } from '@emotion/react';
 
 import classNames from 'classnames';
 
-interface AuthenticatedMenuProps {}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface AuthenticatedMenuProps {
+}
 
 export const AuthenticatedMenu: React.FC<AuthenticatedMenuProps> = ({}) => {
     const {
@@ -21,14 +23,24 @@ export const AuthenticatedMenu: React.FC<AuthenticatedMenuProps> = ({}) => {
     console.log(session)
 
     const isAuthenticated = status === 'authenticated';
-    const isLoading = status === 'loading';
+
+    const {
+        data: decks,
+        isError,
+        isLoading
+    } = api.deck.getDecksByUserId.useQuery({
+        id: session?.user.id.toString() ?? ""
+    });
 
     if (!isAuthenticated || isLoading) return null;
 
-    // const usersDecks = api.deck.getDecksByUserId.useQuery()
+    const onDeckClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+        event.stopPropagation();
+    }
 
     return <div>
         <button className='grid grid-cols-[64px_1fr] gap-2 hover:bg-blue-600 hover:cursor-pointer p-2' onClick={() => setIsOpen(true)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className='w-16 h-16 rounded-[50%]' alt={`${session?.user.name}'s Discord User Avatar.`} src={session?.user.image ?? ""} />
 
             <p className='my-auto'>
@@ -51,9 +63,18 @@ export const AuthenticatedMenu: React.FC<AuthenticatedMenuProps> = ({}) => {
                         <li className='text-lg text-gray-200 bg-blue-500 hover:text-white hover:cursor-pointer hover:bg-blue-600 font-bold font-sans w-full p-2'>
                             Decks
 
-                            {/* <ul>
-                                Loop through decks and display them here.
-                            </ul> */}
+                            <ul>
+                                {decks?.map(({
+                                    id,
+                                    name
+                                }) => {
+                                    return <li key={name}>
+                                        <a href={`/${id}`} onClick={onDeckClick}>
+                                            {name}
+                                        </a>
+                                    </li>
+                                })}
+                            </ul>
                         </li>
                         <li className='text-lg text-gray-200 bg-blue-500 hover:text-white hover:cursor-pointer hover:bg-blue-600 font-bold font-sans w-full p-2'>
                             <button onClick={() => signOut()}>

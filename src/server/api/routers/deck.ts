@@ -6,7 +6,7 @@ import {
     protectedProcedure,
     publicProcedure
 } from "~/server/api/trpc";
-import { attributes, cardTypes, cards, colors, deckCard, decks, sets, stages, types } from "~/server/db/schema";
+import { attributes, cardTypes, cards, deckCard, decks, sets, stages, types } from "~/server/db/schema";
 
 export const deckRouter = createTRPCRouter({
     createDeck: publicProcedure
@@ -43,7 +43,34 @@ export const deckRouter = createTRPCRouter({
                 throw new Error(`Could not insert deck ${name}.`);
             }
         }),
-    addToDeck: protectedProcedure
+    addSingleToDeck: protectedProcedure
+        .input(z.object({
+            deckId: z.number(),
+            cardId: z.number()
+        }))
+        .mutation(async ({ ctx, input }) => {
+            try {
+                const {
+                    deckId,
+                    cardId
+                } = input;
+
+                const deckCardAdded = await ctx
+                    .db
+                    .insert(deckCard)
+                    .values({
+                        deckId,
+                        cardId,
+                        quantity: 1
+                    });
+
+                return deckCardAdded;
+            } catch (error) {
+                console.error(error);
+                throw new Error('Could not insert a card.');
+            }
+        }),
+    incrementQuantityInDeckBy: protectedProcedure
         .input(z.object({
             deckId: z.number(),
             cardId: z.number(),
@@ -70,27 +97,31 @@ export const deckRouter = createTRPCRouter({
                         )
                     );
 
-                let deckCardUpserted = undefined;
+                const newQuantity = !!copiesOfCardInDeck && copiesOfCardInDeck.length > 0
+                    ? quantity + (copiesOfCardInDeck[0]?.quantity ?? 0)
+                    : 1;
 
                 if (copiesOfCardInDeck.length > 0 && !!copiesOfCardInDeck[0]?.quantity) {
-                    deckCardUpserted = await ctx
+                    const cardUpdated = await ctx
                         .db
                         .update(deckCard)
                         .set({
-                            quantity: copiesOfCardInDeck[0].quantity + quantity
+                            quantity: newQuantity
                         });
-                } else {
-                    deckCardUpserted = await ctx
-                        .db
-                        .insert(deckCard)
-                        .values({
-                            deckId,
-                            cardId,
-                            quantity
-                        });
+
+                    return cardUpdated;
                 }
 
-                return deckCardUpserted;
+                const cardAdded = await ctx
+                    .db
+                    .insert(deckCard)
+                    .values({
+                        deckId,
+                        cardId,
+                        quantity
+                    });
+
+                return cardAdded;
             } catch (error) {
                 console.error(error);
                 throw new Error('Could not insert a card.');
@@ -110,6 +141,18 @@ export const deckRouter = createTRPCRouter({
                     quantity
                 } = input;
 
+                if (quantity <= 0) {
+                    const deckCardDeleted = await ctx
+                        .db
+                        .delete(deckCard)
+                        .where(and(
+                            eq(deckCard.deckId, deckId),
+                            eq(deckCard.cardId, cardId)
+                        ));
+
+                        return deckCardDeleted;
+                }
+
                 const deckCardCreated = await ctx
                     .db
                     .update(deckCard)
@@ -125,7 +168,65 @@ export const deckRouter = createTRPCRouter({
                 throw new Error('Could not insert a card.');
             }
         }),
-    removeFromDeck: protectedProcedure
+    decrementQuantityInDeckBy: protectedProcedure
+        .input(z.object({
+            deckId: z.number(),
+            cardId: z.number(),
+            quantity: z.number(),
+        }))
+        .mutation(async ({ ctx, input }) => {
+            try {
+                const {
+                    deckId,
+                    cardId,
+                    quantity
+                } = input;
+
+                const copiesOfCardInDeck = await ctx
+                    .db
+                    .select({
+                        quantity: deckCard.quantity
+                    })
+                    .from(deckCard)
+                    .where(
+                        and(
+                            eq(deckCard.deckId, deckId),
+                            eq(deckCard.cardId, cardId)
+                        )
+                    );
+
+                const newQuantity = !!copiesOfCardInDeck && copiesOfCardInDeck.length > 0
+                    ? quantity - (copiesOfCardInDeck[0]?.quantity ?? 0)
+                    : 1;
+
+                console.log(newQuantity);
+
+                if (newQuantity <= 0) {
+                    const deckCardDeleted = await ctx
+                        .db
+                        .delete(deckCard)
+                        .where(and(
+                            eq(deckCard.deckId, deckId),
+                            eq(deckCard.cardId, cardId)
+                        ));
+
+                        return deckCardDeleted;
+                }
+
+                const cardUpdated = await ctx
+                    .db
+                    .update(deckCard)
+                    .set({
+                        quantity: newQuantity
+                    });
+
+                return cardUpdated;
+            } catch (error) {
+                console.error(error);
+                throw new Error('Could not insert a card.');
+            }
+        }),
+    deleteFromDeck: protectedProcedure
         .input(z.object({
             deckId: z.number(),
             cardId: z.number()
@@ -184,35 +285,6 @@ export const deckRouter = createTRPCRouter({
         }))
         .query(async ({ ctx, input }) => {
             const { id } = input;
-
-            try {
-                const query = await ctx
-                    .db
-                    .select({
-                        id: decks.id,
-                        name: decks.name,
-                        strategy: decks.strategy
-                    })
-                    .from(decks)
-                    .where(eq(
-                        decks.id,
-                        id
-                    ));
-
-                return query;
-            } catch (error) {
-                console.error(error);
-                throw new Error(`Could not retrieve deck by id ${id}.`);
-            }
-        }),
-    getDeckCardsByDeckId: publicProcedure
-        .input(z.object({
-            id: z.number(),
-        }))
-        .query(async ({ ctx, input }) => {
-            const { id } = input;
-
-            console.log('ID: ', id)
 
             try {
                 const cardSubQuery = ctx
@@ -287,12 +359,12 @@ export const deckRouter = createTRPCRouter({
                         id,
                     ));
 
-                console.log('deck: ', deckCardsFound);
+                console.log(`deck cards found: ${deckCardsFound}`)
 
                 return deckCardsFound;
             } catch (error) {
-                console.error(`error: `, error)
-                throw new Error('');
+                console.error(error);
+                throw new Error(`Could not retrieve deck by id ${id}.`);
             }
         }),
     getDecksByPage: publicProcedure

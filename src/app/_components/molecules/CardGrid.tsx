@@ -42,10 +42,10 @@ export const CardGrid: React.FC<CardGridProps> = () => {
 
     const {
         mutate: addToDeck
-    } = api.deck.addToDeck.useMutation({
+    } = api.deck.incrementQuantityInDeckBy.useMutation({
         async onSuccess() {
             // invalidate the getDeckById query
-            await utils.deck.getDeckCardsByDeckId.invalidate();
+            await utils.deck.getDeckById.invalidate();
         }
     });
 
@@ -62,9 +62,9 @@ export const CardGrid: React.FC<CardGridProps> = () => {
     function rightClickOnCard(card: typeof cards) {
         if (card?.[0] && typeof deckId !== 'undefined') {
             addToDeck({
-                quantity: 1,
                 cardId: card[0].id,
-                deckId
+                deckId,
+                quantity: 1
             });
         }
     }

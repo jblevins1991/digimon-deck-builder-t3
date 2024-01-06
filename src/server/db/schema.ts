@@ -240,7 +240,7 @@ export const typeRelations = relations(types, ({ many }) => ({
 }));
 
 export const users = mysqlTable("user", {
-  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),
   emailVerified: timestamp("emailVerified", {

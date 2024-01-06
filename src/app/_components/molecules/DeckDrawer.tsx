@@ -18,20 +18,16 @@ export const DeckList: React.FC<DeckListProps> = () => {
     } = useDeckId();
 
     const {
-        data: deck,
-        isLoading: isDeckLoading,
-        isError: isDeckError
+        data: deckCards,
+        isLoading,
+        isError,
+        error
     } = api.deck.getDeckById.useQuery({
         id: deckId ?? 0
     });
-
-    const {
-        data: deckCards,
-        isLoading: isDeckCardsLoading,
-        isError: isDeckCardsError
-    } = api.deck.getDeckCardsByDeckId.useQuery({
-        id: deckId ?? 0
-    });
+    
+    const deckName: string = (deckCards?.[0]?.deckName as string);
+    const deckStrategy: string = (deckCards?.[0]?.deckStrategy as string);
 
     console.log('deck', deckCards)
 
@@ -48,13 +44,15 @@ export const DeckList: React.FC<DeckListProps> = () => {
         return cardCardTypeName === "Tamer";
     });
 
-    if (isDeckLoading || isDeckCardsLoading) {
+    if (isLoading) {
         return <p>
             Loading...
         </p>;
     }
 
-    if (!deck?.[0]?.name || (isDeckError || isDeckCardsError)) {
+    if (isError) {
+        console.log('deck error', error);
+
         return <p>
             We could not find that deck.
         </p>;
@@ -62,11 +60,11 @@ export const DeckList: React.FC<DeckListProps> = () => {
 
     return <div className="min-h-max w-full grow-0 shadow-xl ml-4">
         <Typography className="text-sans font-bold text-4xl p-4 pb-4" variant="h2">
-            {deck?.[0]?.name}
+            {deckName}
         </Typography>
 
-        {deck?.[0]?.strategy && <Typography className='text-sans font-regular text-xl p-4 py-2'>
-            <b>Strategy:</b> {deck?.[0]?.strategy}
+        {!!deckStrategy && <Typography className='text-sans font-regular text-xl p-4 py-2'>
+            <b>Strategy:</b> {deckStrategy}
         </Typography>}
 
         <div className='w-full overflow-y-auto pb-8'>
@@ -84,17 +82,18 @@ export const DeckList: React.FC<DeckListProps> = () => {
                         cardImageAlt,
                         quantity,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    }: any) => {
+                    }) => {
                         return <CardBlade
+                            key={cardId as string}
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                            alt={cardImageAlt ?? ""}
+                            alt={cardImageAlt as string}
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                            cardId={cardId}
+                            cardId={cardId as string}
                             color={"white"}
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                            name={cardName ?? ""}
+                            name={cardName as string}
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                            src={cardImage ?? ""}
+                            src={cardImage as string}
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                             quantity={quantity ?? 0}
                         />;
