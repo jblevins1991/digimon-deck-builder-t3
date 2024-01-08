@@ -11,6 +11,7 @@ import { ActiveFilters } from '../molecules/ActiveFilters';
 import { DeckBuilderSidebar } from '../orgamisms/DeckBuilderSidebar';
 import { InnerSidebar } from '../orgamisms/InnerSidebar';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DeckBuilderTemplateProps {
     //
 };

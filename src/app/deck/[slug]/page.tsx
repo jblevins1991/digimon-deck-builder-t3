@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { CardTemplate } from '../_components/templates/CardTemplate';
+import { DeckTemplate } from '~/app/_components/templates/DeckTemplate';
 
 export default async function Deck() {
     return <main className='mx-4'>
-        <CardTemplate />
+        <DeckTemplate />
     </main>;
 }

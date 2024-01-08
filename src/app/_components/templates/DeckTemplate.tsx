@@ -1,26 +1,45 @@
+"use client";
+import { useParams } from 'next/navigation';
 import * as React from 'react';
 import { api } from '~/trpc/react';
 
-interface DeckTemplateProps {
-    deckId: number;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface DeckTemplateProps {}
 
-export const DeckTemplate: React.FC<DeckTemplateProps> = ({
-    deckId
-}) => {
+export const DeckTemplate: React.FC<DeckTemplateProps> = () => {
+    const params = useParams();
+
+    const deckId = !!params.slug
+        ? params.slug as string
+        : "";
+
     const {
         data: deck,
-        isLoading: isDeckLoading,
-        isError: isDeckError,
-        error: deckError
-    } = api.deck.getDeckById.useQuery({ id: deckId });
+        isLoading,
+        isError
+    } = api.deck.getDeckById.useQuery({ id: parseInt(deckId) });
 
-    const {
-        data: deckCards,
-        isLoading: isDeckCardsLoading,
-        isError: isDeckCardsError,
-        error: deckCardsError
-    } = api.deck.getDeckCardsByDeckId.useQuery({ id: deckId });
+    console.log({
+        params,
+        deckId,
+        deck
+    })
 
-    return <></>;
+    if (isError) {
+        return <h1>
+            Error
+        </h1>;
+    }
+
+    if (isLoading) {
+        return <h1>
+            Loading
+        </h1>;
+    }
+
+    console.log('deck', deck)
+
+    return <>
+
+    </>;
 };

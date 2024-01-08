@@ -359,8 +359,6 @@ export const deckRouter = createTRPCRouter({
                         id,
                     ));
 
-                console.log(`deck cards found: ${deckCardsFound}`)
-
                 return deckCardsFound;
             } catch (error) {
                 console.error(error);
